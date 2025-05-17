@@ -71,6 +71,9 @@ class Bank(models.Model):
     bank_choose_identifier = models.CharField(
         max_length=255, blank=True, null=True, verbose_name=_("Bank choose identifier")
     )
+    card_hash_number = models.CharField(
+        max_length=255, blank=True, null=True, verbose_name=_("Card hash number")
+    )
 
     created_at = models.DateTimeField(auto_now_add=True, editable=False, verbose_name=_("Created at"))
     update_at = models.DateTimeField(auto_now=True, editable=False, verbose_name=_("Updated at"))

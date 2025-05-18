@@ -103,10 +103,17 @@ class Sepehr(BaseBank):
         if request.POST.get("respcode", "-1") == "0" and digital_receipt:
             self._set_reference_number(digital_receipt)
             self._bank.reference_number = digital_receipt
-            extra_information = f"digitalreceipt={digital_receipt}, rrn={request.POST.get('rrn')}, tracenumber={request.POST.get('tracenumber')}"
+            extra_information = (
+                f"digitalreceipt={digital_receipt}, "
+                f"rrn={request.POST.get('rrn')}, "
+                f"tracenumber={request.POST.get('tracenumber')}, "
+                f"cardnumber={request.POST.get('cardnumber')}, "
+                f"bank={request.POST.get('issuerbank')}"
+            )
             self._bank.extra_information = extra_information
+            self._bank.card_hash_number = request.POST.get('cardnumber')
             self._bank.save()
-
+            
     def verify_from_gateway(self, request):
         super(Sepehr, self).verify_from_gateway(request)
 

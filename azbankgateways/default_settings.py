@@ -18,6 +18,7 @@ BANK_CLASS = getattr(
         "MELLAT": "azbankgateways.banks.Mellat",
         "PAYV1": "azbankgateways.banks.PayV1",
         "SEPEHR": "azbankgateways.banks.Sepehr",
+        "PEC": "azbankgateways.banks.PEC",
     },
 )
 _AZ_IRANIAN_BANK_GATEWAYS = getattr(settings, "AZ_IRANIAN_BANK_GATEWAYS", {})

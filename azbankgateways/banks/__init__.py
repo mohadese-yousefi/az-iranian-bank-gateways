@@ -8,3 +8,4 @@ from .sep import SEP  # noqa
 from .zarinpal import Zarinpal  # noqa
 from .zibal import Zibal  # noqa
 from .sepehr import Sepehr  # noqa
+from .pec import PEC  # noqa

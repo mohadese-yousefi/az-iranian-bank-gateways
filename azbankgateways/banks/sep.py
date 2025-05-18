@@ -102,7 +102,7 @@ class SEP(BaseBank):
                 f"RRN={request.GET.get('RRN')}"
             )
             self._bank.extra_information = extra_information
-            self._bank.card_masked = request.GET.get('MaskedPan')
+            self._bank.card_hash_number = request.GET.get('MaskedPan')
             self._bank.save()
 
     def verify_from_gateway(self, request):

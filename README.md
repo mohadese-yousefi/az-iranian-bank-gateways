@@ -96,11 +96,16 @@
              "MERCHANT_CODE": "<YOUR MERCHANT CODE>",
              "X_SANDBOX": 0,  # 0 disable, 1 active
          },
+         "SEPEHR": {
+             "TERMINAL_ID": "<YOUR TERMINAL ID>",
+         },
+         "PEC": {
+             "PIN": "<YOUR PIN>",
+         },
      },
      "IS_SAMPLE_FORM_ENABLE": True,  # اختیاری و پیش فرض غیر فعال است
      "DEFAULT": "BMI",
      "CURRENCY": "IRR",  # اختیاری
-     "TRACKING_CODE_QUERY_PARAM": "tc",  # اختیاری
      "TRACKING_CODE_LENGTH": 16,  # اختیاری
      "SETTING_VALUE_READER_CLASS": "azbankgateways.readers.DefaultReader",  # اختیاری
      "BANK_PRIORITIES": [

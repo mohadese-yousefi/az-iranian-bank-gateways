@@ -21,27 +21,21 @@ class Sepehr(BaseBank):
         self._token_api_url = "https://sepehr.shaparak.ir:8081/V1/PeymentApi/GetToken"
         self._payment_url = "https://sepehr.shaparak.ir:8080/pay"
         self._verify_api_url = "https://sepehr.shaparak.ir:8081/V1/PeymentApi/Advice"
-        logging.debug(f"Sepehr gateway initialized with kwargs: {kwargs}")
 
     def get_bank_type(self):
         return BankType.SEPEHR
 
     def set_default_settings(self):
-        logging.debug(f"Setting default settings with: {self.default_setting_kwargs}")
         for item in ["TERMINAL_ID"]:
             if item not in self.default_setting_kwargs:
                 logging.error(f"Missing required setting: {item}")
                 raise SettingDoesNotExist(f"Missing required setting: {item}")
             setattr(self, f"_{item.lower()}", self.default_setting_kwargs[item])
-            logging.debug(f"Set {item.lower()} to {self.default_setting_kwargs[item]}")
 
     def check_gateway(self, amount=None):
-        logging.debug("Checking Sepehr gateway availability")
         # Simple check - just verify we have the required settings
         if not self._terminal_id:
-            logging.error("Sepehr gateway check failed: terminal_id is not set")
             raise BankGatewayConnectionError("terminal_id is not set")
-        logging.debug("Sepehr gateway check passed")
         return True
 
     def get_pay_data(self):

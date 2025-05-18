@@ -94,8 +94,15 @@ class SEP(BaseBank):
         if request.GET.get("State", "NOK") == "OK" and ref_num:
             self._set_reference_number(ref_num)
             self._bank.reference_number = ref_num
-            extra_information = f"TRACENO={request.GET.get('TRACENO')}, RefNum={ref_num}, Token={token}"
+            extra_information = (
+                f"TRACENO={request.GET.get('TRACENO')}, "
+                f"RefNum={ref_num}, "
+                f"Token={token}, "
+                f"MaskedPan={request.GET.get('MaskedPan')}, "
+                f"RRN={request.GET.get('RRN')}"
+            )
             self._bank.extra_information = extra_information
+            self._bank.card_masked = request.GET.get('MaskedPan')
             self._bank.save()
 
     def verify_from_gateway(self, request):

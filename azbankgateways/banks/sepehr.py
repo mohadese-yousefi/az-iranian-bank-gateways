@@ -40,7 +40,7 @@ class Sepehr(BaseBank):
 
     def get_pay_data(self):
         data = {
-            "Amount": str(int(self.get_gateway_amount()) * 10),  # Convert to Rial
+            "Amount": self.get_gateway_amount(),
             "callbackURL": self._get_gateway_callback_url(),
             "invoiceID": self.get_tracking_code(),
             "terminalID": self._terminal_id,
@@ -71,7 +71,7 @@ class Sepehr(BaseBank):
         return self._payment_url
 
     def _get_gateway_payment_method_parameter(self):
-        return "GET"
+        return "POST"
 
     def _get_gateway_payment_parameter(self):
         params = {
@@ -87,11 +87,6 @@ class Sepehr(BaseBank):
 
     def prepare_verify_from_gateway(self):
         super(Sepehr, self).prepare_verify_from_gateway()
-        for method in ["GET", "POST", "data"]:
-            token = getattr(self.get_request(), method).get("digitalreceipt", None)
-            if token:
-                logging.info(f"Sepehr method: {method}")
-                break
 
         request = self.get_request()
         tracking_code = request.POST.get("invoiceid")
@@ -137,7 +132,7 @@ class Sepehr(BaseBank):
         data = self.get_verify_data()
         response_json = self._send_data(self._verify_api_url, data)
         
-        if response_json.get("Status") == "OK":
+        if response_json.get("Status") == "Ok":
             self._set_payment_status(PaymentStatus.COMPLETE)
         else:
             self._set_payment_status(PaymentStatus.CANCEL_BY_USER)

@@ -366,6 +366,11 @@ class BaseBank:
             url_parts = list(parse.urlparse(url))
             if not (url_parts[0] and url_parts[1]):
                 url = self.get_request().build_absolute_uri(url)
+                
+                # Force HTTPS if not already
+                if url.startswith('http:'):
+                    url = 'https:' + url[5:]
+
             query = dict(parse.parse_qsl(self.get_request().GET.urlencode()))
             query.update({"bank_type": self.get_bank_type()})
             query.update({"identifier": self.identifier})

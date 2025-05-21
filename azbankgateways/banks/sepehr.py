@@ -88,7 +88,7 @@ class Sepehr(BaseBank):
     def prepare_verify_from_gateway(self):
         super(Sepehr, self).prepare_verify_from_gateway()
         for method in ["GET", "POST", "data"]:
-            token = getattr(self.get_request(), method).get("token", None)
+            token = getattr(self.get_request(), method).get("digitalreceipt", None)
             if token:
                 logging.info(f"Sepehr method: {method}")
                 break
@@ -113,7 +113,7 @@ class Sepehr(BaseBank):
             self._bank.extra_information = extra_information
             self._bank.card_hash_number = request.POST.get('cardnumber')
             self._bank.save()
-            
+
     def verify_from_gateway(self, request):
         super(Sepehr, self).verify_from_gateway(request)
 

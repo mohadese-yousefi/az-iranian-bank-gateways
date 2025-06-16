@@ -86,8 +86,8 @@ class SEP(BaseBank):
     def prepare_verify_from_gateway(self):
         super(SEP, self).prepare_verify_from_gateway()
         request = self.get_request()
-        logging.ERROR(request)
-        logging.ERROR(request.GET)
+        logging.error(request)
+        logging.error(request.GET)
         tracking_code = request.GET.get("ResNum")
         token = request.GET.get("Token")
         self._set_tracking_code(tracking_code)

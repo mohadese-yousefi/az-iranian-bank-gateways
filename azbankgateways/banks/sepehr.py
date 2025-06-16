@@ -138,7 +138,7 @@ class Sepehr(BaseBank):
             self._set_payment_status(PaymentStatus.CANCEL_BY_USER)
             logging.debug("Sepehr gateway unapprove payment")
 
-    def _send_data(self, api, data, timeout=10):
+    def _send_data(self, api, data, timeout=50):
         try:
             headers = {'Content-Type': 'application/json'}
             response = requests.post(api, json=data, headers=headers, timeout=timeout)

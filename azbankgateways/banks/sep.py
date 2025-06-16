@@ -86,6 +86,8 @@ class SEP(BaseBank):
     def prepare_verify_from_gateway(self):
         super(SEP, self).prepare_verify_from_gateway()
         request = self.get_request()
+        logging.ERROR(request)
+        logging.ERROR(request.GET)
         tracking_code = request.GET.get("ResNum")
         token = request.GET.get("Token")
         self._set_tracking_code(tracking_code)
@@ -133,7 +135,7 @@ class SEP(BaseBank):
 
     def _send_data(self, api, data):
         try:
-            response = requests.post(api, json=data, timeout=5)
+            response = requests.post(api, json=data, timeout=80)
         except requests.Timeout:
             logging.exception("SEP time out gateway {}".format(data))
             raise BankGatewayConnectionError()
@@ -153,7 +155,7 @@ class SEP(BaseBank):
             "Connection": "keep-alive",
             "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0",
         }
-        transport = Transport(timeout=5, operation_timeout=5)
+        transport = Transport(timeout=25, operation_timeout=25)
         transport.session.headers = headers
         client = Client(url, transport=transport)
         return client

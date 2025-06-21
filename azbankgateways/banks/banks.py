@@ -141,10 +141,20 @@ class BaseBank:
 
     def verify_from_gateway(self, request):
         """زمانی که کاربر از گیت وی بانک باز میگردد این متد فراخوانی می شود."""
-        self.set_request(request)
-        self.prepare_verify_from_gateway()
-        self._set_payment_status(PaymentStatus.RETURN_FROM_BANK)
-        self.verify(self.get_tracking_code())
+        try:
+            self.set_request(request)
+            self.prepare_verify_from_gateway()
+            
+            # First verify the payment with the bank
+            self.verify(self.get_tracking_code())
+            
+            # If verification was successful, update the status
+            self._set_payment_status(PaymentStatus.RETURN_FROM_BANK)
+            
+        except Exception as e:
+            logging.error(f"Error in verify_from_gateway: {str(e)}")
+            # If verification fails, still try to redirect the user back
+            raise
 
     def get_client_callback_url(self):
         """این متد پس از وریفای شدن استفاده خواهد شد. لینک برگشت را بر میگرداند.حال چه وریفای موفقیت آمیز باشد چه با
@@ -155,9 +165,32 @@ class BaseBank:
         )
 
     def redirect_client_callback(self):
-        """ "این متد کاربر را به مسیری که نرم افزار میخواهد هدایت خواهد کرد و پس از وریفای شدن استفاده می شود."""
+        """این متد کاربر را به مسیری که نرم افزار میخواهد هدایت خواهد کرد و پس از وریفای شدن استفاده می شود."""
         logging.debug("Redirect to client")
-        return redirect(self.get_client_callback_url())
+        try:
+            from urllib.parse import urlparse, parse_qs, urlencode
+            url = self._bank.callback_url
+            parsed_url = urlparse(url)
+            
+            # Get existing query parameters
+            query_params = parse_qs(parsed_url.query)
+            
+            # Add tracking code to query parameters
+            query_params[settings.TRACKING_CODE_QUERY_PARAM] = [str(self.get_tracking_code())]
+            
+            # If it's a full URL with domain
+            if parsed_url.netloc:
+                query_string = urlencode(query_params, doseq=True)
+                return redirect(f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{query_string}")
+            
+            # If it's a relative path
+            query_string = urlencode(query_params, doseq=True)
+            return redirect(f"{parsed_url.path}?{query_string}")
+            
+        except Exception as e:
+            logging.error(f"Error in redirect_client_callback: {str(e)}")
+            # Fallback to original behavior
+            return redirect(self.get_client_callback_url())
 
     def set_mobile_number(self, mobile_number):
         """شماره موبایل کاربر را جهت ارسال به درگاه برای فتچ کردن شماره کارت ها و ... ارسال خواهد کرد."""
@@ -167,7 +200,7 @@ class BaseBank:
         return self._mobile_number
 
     def set_client_callback_url(self, callback_url):
-        """ذخیره کال بک از طریق نرم افزار برای بازگردانی کاربر پس از بازگشت درگاه بانک به پکیج و سپس از پکیج به نرم
+        """ذخیره کال بک از طریق نرم افزار برای بازگردانی کاربر پس از بازگشت درگاه به پکیج و سپس از پکیج به نرم
         افزار."""
         if not self._bank:
             self._client_callback_url = callback_url

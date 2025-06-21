@@ -11,97 +11,95 @@ from azbankgateways.utils import get_json
 
 
 class SEP(BaseBank):
-    _merchant_code = None
-    _terminal_code = None
+_merchant_code = None
+_terminal_code = None
 
-    def __init__(self, **kwargs):
-        super(SEP, self).__init__(**kwargs)
-        if not self._is_strict_origin_policy_enabled():
-            raise SettingDoesNotExist(
-                "SECURE_REFERRER_POLICY is not set to 'strict-origin-when-cross-origin' in django setting,"
-                " it's mandatory for Saman gateway"
-            )
+def __init__(self, **kwargs):
+    super(SEP, self).__init__(**kwargs)
+    if not self._is_strict_origin_policy_enabled():
+        raise SettingDoesNotExist(
+            "SECURE_REFERRER_POLICY is not set to 'strict-origin-when-cross-origin' in django setting,"
+            " it's mandatory for Saman gateway"
+        )
 
-        self.set_gateway_currency(CurrencyEnum.IRR)
-        self._token_api_url = "https://sep.shaparak.ir/MobilePG/MobilePayment"
-        self._payment_url = "https://sep.shaparak.ir/OnlinePG/OnlinePG"
-        self._verify_api_url = "https://verify.sep.ir/Payments/ReferencePayment.asmx?WSDL"
+    self.set_gateway_currency(CurrencyEnum.IRR)
+    self._token_api_url = "https://sep.shaparak.ir/MobilePG/MobilePayment"
+    self._payment_url = "https://sep.shaparak.ir/OnlinePG/OnlinePG"
+    self._verify_api_url = "https://verify.sep.ir/Payments/ReferencePayment.asmx?WSDL"
 
-    def get_bank_type(self):
-        return BankType.SEP
+def get_bank_type(self):
+    return BankType.SEP
 
-    def set_default_settings(self):
-        for item in ["MERCHANT_CODE", "TERMINAL_CODE"]:
-            if item not in self.default_setting_kwargs:
-                raise SettingDoesNotExist()
-            setattr(self, f"_{item.lower()}", self.default_setting_kwargs[item])
+def set_default_settings(self):
+    for item in ["MERCHANT_CODE", "TERMINAL_CODE"]:
+        if item not in self.default_setting_kwargs:
+            raise SettingDoesNotExist()
+        setattr(self, f"_{item.lower()}", self.default_setting_kwargs[item])
 
-    def get_pay_data(self):
-        data = {
-            "Action": "Token",
-            "Amount": self.get_gateway_amount(),
-            "Wage": 0,
-            "TerminalId": self._merchant_code,
-            "ResNum": self.get_tracking_code(),
-            "RedirectURL": self._get_gateway_callback_url(),
-            "CellNumber": self.get_mobile_number(),
-        }
-        return data
+def get_pay_data(self):
+    data = {
+        "Action": "Token",
+        "Amount": self.get_gateway_amount(),
+        "Wage": 0,
+        "TerminalId": self._merchant_code,
+        "ResNum": self.get_tracking_code(),
+        "RedirectURL": self._get_gateway_callback_url(),
+        "CellNumber": self.get_mobile_number(),
+    }
+    return data
 
-    def prepare_pay(self):
-        super(SEP, self).prepare_pay()
+def prepare_pay(self):
+    super(SEP, self).prepare_pay()
 
-    def pay(self):
-        super(SEP, self).pay()
-        data = self.get_pay_data()
-        response_json = self._send_data(self._token_api_url, data)
-        if str(response_json["status"]) == "1":
-            token = response_json["token"]
-            self._set_reference_number(token)
-        else:
-            logging.critical("SEP gateway reject payment")
-            raise BankGatewayRejectPayment(self.get_transaction_status_text())
+def pay(self):
+    super(SEP, self).pay()
+    data = self.get_pay_data()
+    response_json = self._send_data(self._token_api_url, data)
+    if str(response_json["status"]) == "1":
+        token = response_json["token"]
+        self._set_reference_number(token)
+    else:
+        logging.critical("SEP gateway reject payment")
+        raise BankGatewayRejectPayment(self.get_transaction_status_text())
 
-    """
-    : gateway
-    """
+"""
+: gateway
+"""
 
-    def _get_gateway_payment_url_parameter(self):
-        return self._payment_url
+def _get_gateway_payment_url_parameter(self):
+    return self._payment_url
 
-    def _get_gateway_payment_method_parameter(self):
-        return "POST"
+def _get_gateway_payment_method_parameter(self):
+    return "POST"
 
-    def _get_gateway_payment_parameter(self):
-        params = {
-            "Token": self.get_reference_number(),
-            "GetMethod": "true",
-        }
-        return params
+def _get_gateway_payment_parameter(self):
+    params = {
+        "Token": self.get_reference_number(),
+        "GetMethod": "true",
+    }
+    return params
 
-    """
-    verify from gateway
-    """
+"""
+verify from gateway
+"""
 
-    def prepare_verify_from_gateway(self):
-        super(SEP, self).prepare_verify_from_gateway()
-        request = self.get_request()
-        logging.error(request)
-        logging.error(request.GET)
-        tracking_code = request.GET.get("ResNum")
-        token = request.GET.get("Token")
-        self._set_tracking_code(tracking_code)
-        self._set_bank_record()
-        ref_num = request.GET.get("RefNum")
-        if request.GET.get("State", "NOK") == "OK" and ref_num:
-            self._set_reference_number(ref_num)
-            self._bank.reference_number = ref_num
-            extra_information = (
-                f"TRACENO={request.GET.get('TRACENO')}, "
-                f"RefNum={ref_num}, "
-                f"Token={token}, "
-                f"MaskedPan={request.GET.get('MaskedPan')}, "
-                f"RRN={request.GET.get('RRN')}"
+def prepare_verify_from_gateway(self):
+    super(SEP, self).prepare_verify_from_gateway()
+    request = self.get_request()
+    tracking_code = request.GET.get("ResNum")
+    token = request.GET.get("Token")
+    self._set_tracking_code(tracking_code)
+    self._set_bank_record()
+    ref_num = request.GET.get("RefNum")
+    if request.GET.get("State", "NOK") == "OK" and ref_num:
+        self._set_reference_number(ref_num)
+        self._bank.reference_number = ref_num
+        extra_information = (
+            f"TRACENO={request.GET.get('TraceNo')}, "
+            f"RefNum={ref_num}, "
+            f"Token={token}, "
+            f"MaskedPan={request.GET.get('SecurePan')}, "
+                f"RRN={request.GET.get('Rrn')}"
             )
             self._bank.extra_information = extra_information
             self._bank.card_hash_number = request.GET.get('MaskedPan')

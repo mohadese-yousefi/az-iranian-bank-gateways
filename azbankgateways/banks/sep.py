@@ -107,19 +107,19 @@ class SEP(BaseBank):
     
     def verify_from_gateway(self, request):
         super(SEP, self).verify_from_gateway(request)
-    
+
     """
     verify
     """
-    
+
     def get_verify_data(self):
         super(SEP, self).get_verify_data()
         data = self.get_reference_number(), self._merchant_code
         return data
-    
+
     def prepare_verify(self, tracking_code):
         super(SEP, self).prepare_verify(tracking_code)
-    
+
     def verify(self, transaction_code):
         super(SEP, self).verify(transaction_code)
         data = self.get_verify_data()
@@ -130,7 +130,7 @@ class SEP(BaseBank):
         else:
             self._set_payment_status(PaymentStatus.CANCEL_BY_USER)
             logging.debug("SEP gateway unapprove payment")
-    
+
     def _send_data(self, api, data):
         try:
             response = requests.post(api, json=data, timeout=80)
@@ -140,11 +140,11 @@ class SEP(BaseBank):
         except requests.ConnectionError:
             logging.exception("SEP time out gateway {}".format(data))
             raise BankGatewayConnectionError()
-    
+
         response_json = get_json(response)
         self._set_transaction_status_text(response_json.get("errorDesc"))
         return response_json
-    
+
     @staticmethod
     def _get_client(url):
         headers = {

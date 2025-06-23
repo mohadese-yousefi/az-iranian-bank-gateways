@@ -99,62 +99,62 @@ class SEP(BaseBank):
                 f"RefNum={ref_num}, "
                 f"Token={token}, "
                 f"MaskedPan={request.GET.get('SecurePan')}, "
-                    f"RRN={request.GET.get('Rrn')}"
-                )
+                f"RRN={request.GET.get('Rrn')}"
+            )
             self._bank.extra_information = extra_information
             self._bank.card_hash_number = request.GET.get('MaskedPan')
             self._bank.save()
     
-        def verify_from_gateway(self, request):
-            super(SEP, self).verify_from_gateway(request)
+    def verify_from_gateway(self, request):
+        super(SEP, self).verify_from_gateway(request)
     
-        """
-        verify
-        """
+    """
+    verify
+    """
     
-        def get_verify_data(self):
-            super(SEP, self).get_verify_data()
-            data = self.get_reference_number(), self._merchant_code
-            return data
+    def get_verify_data(self):
+        super(SEP, self).get_verify_data()
+        data = self.get_reference_number(), self._merchant_code
+        return data
     
-        def prepare_verify(self, tracking_code):
-            super(SEP, self).prepare_verify(tracking_code)
+    def prepare_verify(self, tracking_code):
+        super(SEP, self).prepare_verify(tracking_code)
     
-        def verify(self, transaction_code):
-            super(SEP, self).verify(transaction_code)
-            data = self.get_verify_data()
-            client = self._get_client(self._verify_api_url)
-            result = client.service.verifyTransaction(*data)
-            if result == self.get_gateway_amount():
-                self._set_payment_status(PaymentStatus.COMPLETE)
-            else:
-                self._set_payment_status(PaymentStatus.CANCEL_BY_USER)
-                logging.debug("SEP gateway unapprove payment")
+    def verify(self, transaction_code):
+        super(SEP, self).verify(transaction_code)
+        data = self.get_verify_data()
+        client = self._get_client(self._verify_api_url)
+        result = client.service.verifyTransaction(*data)
+        if result == self.get_gateway_amount():
+            self._set_payment_status(PaymentStatus.COMPLETE)
+        else:
+            self._set_payment_status(PaymentStatus.CANCEL_BY_USER)
+            logging.debug("SEP gateway unapprove payment")
     
-        def _send_data(self, api, data):
-            try:
-                response = requests.post(api, json=data, timeout=80)
-            except requests.Timeout:
-                logging.exception("SEP time out gateway {}".format(data))
-                raise BankGatewayConnectionError()
-            except requests.ConnectionError:
-                logging.exception("SEP time out gateway {}".format(data))
-                raise BankGatewayConnectionError()
+    def _send_data(self, api, data):
+        try:
+            response = requests.post(api, json=data, timeout=80)
+        except requests.Timeout:
+            logging.exception("SEP time out gateway {}".format(data))
+            raise BankGatewayConnectionError()
+        except requests.ConnectionError:
+            logging.exception("SEP time out gateway {}".format(data))
+            raise BankGatewayConnectionError()
     
-            response_json = get_json(response)
-            self._set_transaction_status_text(response_json.get("errorDesc"))
-            return response_json
+        response_json = get_json(response)
+        self._set_transaction_status_text(response_json.get("errorDesc"))
+        return response_json
     
-        @staticmethod
-        def _get_client(url):
-            headers = {
-                "Accept": "*/*",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Connection": "keep-alive",
-                "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0",
-            }
-            transport = Transport(timeout=25, operation_timeout=25)
-            transport.session.headers = headers
-            client = Client(url, transport=transport)
-            return client
+    @staticmethod
+    def _get_client(url):
+        headers = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0",
+        }
+        transport = Transport(timeout=25, operation_timeout=25)
+        transport.session.headers = headers
+        client = Client(url, transport=transport)
+        return client
     

@@ -7,7 +7,9 @@
 <body>
 
 <form id='id_form' action="{{ url }}" method="{{ method }}">
-    {% csrf_token %}
+    {% if method == "POST" %}
+        {% csrf_token %}
+    {% endif %}
     {% for key, value in params.items %}
         <input type="hidden" name="{{ key }}" value="{{ value }}">
     {% endfor %}

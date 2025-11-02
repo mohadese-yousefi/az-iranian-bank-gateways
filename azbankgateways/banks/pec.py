@@ -75,13 +75,15 @@ class PEC(BaseBank):
     """
 
     def _get_gateway_payment_url_parameter(self):
-        return f"{self._payment_url}?token={self.get_reference_number()}"
+        return self._payment_url
 
     def _get_gateway_payment_method_parameter(self):
         return "GET"
 
     def _get_gateway_payment_parameter(self):
-        return {}
+        return {
+            "token": self.get_reference_number(),
+        }
 
     """
     verify from gateway

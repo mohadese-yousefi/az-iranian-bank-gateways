@@ -102,7 +102,7 @@ class SEP(BaseBank):
                 f"RRN={request.GET.get('Rrn')}"
             )
             self._bank.extra_information = extra_information
-            self._bank.card_hash_number = request.GET.get('MaskedPan')
+            self._bank.card_hash_number = request.GET.get('SecurePan')
             self._bank.save()
             
         self._set_payment_status(PaymentStatus.RETURN_FROM_BANK)

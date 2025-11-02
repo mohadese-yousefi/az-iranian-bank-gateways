@@ -96,18 +96,16 @@ class PEC(BaseBank):
             # Get data from form
             token = request.POST.get("Token")
             order_id = request.POST.get("OrderId")
-            status_code = int(request.POST.get("status", "-1"))
             rrn = request.POST.get("RRN")
             strace_number = request.POST.get("sTraceNo")
-            card_number = request.POST.get("HashCardNumber", "")
+            card_number = request.POST.get("CardNumberMasked", "")
         else:
             # Fallback to GET parameters if needed
             token = request.GET.get("Token")
             order_id = request.GET.get("OrderId")
-            status_code = int(request.GET.get("status", "-1"))
             rrn = request.GET.get("RRN", "")
             strace_number = request.GET.get("sTraceNo", "")
-            card_number = request.GET.get("HashCardNumber", "")
+            card_number = request.GET.get("CardNumberMasked", "")
         
         self._set_tracking_code(order_id)
         self._set_bank_record()
@@ -116,14 +114,9 @@ class PEC(BaseBank):
             self._set_reference_number(token)
             self._bank.reference_number = token
             
-            # Store transaction status code
-            self._bank.status_code = status_code
-            
             # Store additional information
             extra_information = (
-                f"Status={status_code}, "
-                f"Token={token}, "
-                f"CardHolderPan={card_number}, "
+                f"CardNumberMasked={card_number}, "
                 f"RRN={rrn}, "
                 f"TraceNo={strace_number}"
             )
@@ -162,7 +155,7 @@ class PEC(BaseBank):
                 self._set_payment_status(PaymentStatus.COMPLETE)
                 # Store masked card number from confirmation response
                 if hasattr(result, 'CardNumberMasked'):
-                    self._bank.card_masked = result.CardNumberMasked
+                    self._bank.card_hash_number = result.CardNumberMasked
                     self._bank.save()
             elif result.Status == -138:
                 self._set_payment_status(PaymentStatus.CANCEL_BY_USER)

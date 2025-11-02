@@ -15,6 +15,7 @@ class BankAdmin(admin.ModelAdmin):
         "callback_url",
         "extra_information",
         "bank_choose_identifier",
+        "card_hash_number",
         "created_at",
         "update_at",
     ]
@@ -25,6 +26,7 @@ class BankAdmin(admin.ModelAdmin):
         "tracking_code",
         "amount",
         "reference_number",
+        "card_hash_number",
         "response_result",
         "callback_url",
         "extra_information",

@@ -148,12 +148,12 @@ class BaseBank:
             # First verify the payment with the bank
             self.verify(self.get_tracking_code())
             
-            # If verification was successful, update the status
-            self._set_payment_status(PaymentStatus.RETURN_FROM_BANK)
+            # No need to set RETURN_FROM_BANK if verify() was successful
+            # The verify() method will have already set the appropriate status
             
         except Exception as e:
             logging.error(f"Error in verify_from_gateway: {str(e)}")
-            # If verification fails, still try to redirect the user back
+            
             raise
 
     def get_client_callback_url(self):

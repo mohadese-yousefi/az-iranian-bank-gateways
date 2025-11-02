@@ -104,6 +104,8 @@ class SEP(BaseBank):
             self._bank.extra_information = extra_information
             self._bank.card_hash_number = request.GET.get('MaskedPan')
             self._bank.save()
+            
+        self._set_payment_status(PaymentStatus.RETURN_FROM_BANK)
 
     def verify_from_gateway(self, request):
         super(SEP, self).verify_from_gateway(request)

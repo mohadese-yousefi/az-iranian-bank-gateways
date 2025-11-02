@@ -1,7 +1,6 @@
 import logging
 import uuid
 from datetime import datetime
-from urllib import parse
 
 import requests
 from zeep import Client, Transport
@@ -83,24 +82,6 @@ class PEC(BaseBank):
     def _get_gateway_payment_parameter(self):
         return {}
 
-    def _get_gateway_callback_url(self):
-        """Override to return callback URL without query parameters since PEC doesn't allow them"""
-        from django.urls import reverse
-        from .. import default_settings as settings
-        
-        url = reverse(settings.CALLBACK_NAMESPACE)
-        if self.get_request():
-            url_parts = list(parse.urlparse(url))
-            if not (url_parts[0] and url_parts[1]):
-                url = self.get_request().build_absolute_uri(url)
-                
-                # Force HTTPS if not already
-                if url.startswith('http:'):
-                    url = 'https:' + url[5:]
-        
-        # Don't add query parameters for PEC
-        return url
-
     """
     verify from gateway
     """
@@ -170,35 +151,30 @@ class PEC(BaseBank):
     def verify(self, transaction_code):
         super(PEC, self).verify(transaction_code)
         
-        # Only proceed with verification if status was initially successful
-        if self._bank.status_code == 0:
-            data = self.get_verify_data()
-            client = self._get_client(self._verify_api_url)
+        data = self.get_verify_data()
+        client = self._get_client(self._verify_api_url)
+        
+        try:
+            result = client.service.ConfirmPayment(requestData=data)
             
-            try:
-                result = client.service.ConfirmPayment(requestData=data)
-                
-                if result.Status == 0:
-                    self._set_payment_status(PaymentStatus.COMPLETE)
-                    # Store masked card number from confirmation response
-                    if hasattr(result, 'CardNumberMasked'):
-                        self._bank.card_masked = result.CardNumberMasked
-                        self._bank.save()
-                elif result.Status == -138:
-                    self._set_payment_status(PaymentStatus.CANCEL_BY_USER)
-                    self._set_transaction_status_text(f"Error: {result.Message}")
-                    logging.debug(f"PEC gateway unapprove payment: {result.Message}")
-                else:
-                    self._set_payment_status(PaymentStatus.ERROR)
-                    self._set_transaction_status_text(f"Error: {result.Message}")
-                    logging.debug(f"PEC gateway unapprove payment: {result.Message}")
-            except Exception as ex:
-                logging.exception(f"Error in PEC verify: {ex}")
+            if result.Status == 0:
+                self._set_payment_status(PaymentStatus.COMPLETE)
+                # Store masked card number from confirmation response
+                if hasattr(result, 'CardNumberMasked'):
+                    self._bank.card_masked = result.CardNumberMasked
+                    self._bank.save()
+            elif result.Status == -138:
+                self._set_payment_status(PaymentStatus.CANCEL_BY_USER)
+                self._set_transaction_status_text(f"Error: {result.Message}")
+                logging.debug(f"PEC gateway unapprove payment: {result.Message}")
+            else:
                 self._set_payment_status(PaymentStatus.ERROR)
-                raise BankGatewayConnectionError(str(ex))
-        else:
-            # Payment was already marked as failed or cancelled in prepare_verify_from_gateway
-            logging.debug(f"PEC payment already marked as failed with status code: {self._bank.status_code}")
+                self._set_transaction_status_text(f"Error: {result.Message}")
+                logging.debug(f"PEC gateway unapprove payment: {result.Message}")
+        except Exception as ex:
+            logging.exception(f"Error in PEC verify: {ex}")
+            self._set_payment_status(PaymentStatus.ERROR)
+            raise BankGatewayConnectionError(str(ex))
 
     @staticmethod
     def _get_client(url):

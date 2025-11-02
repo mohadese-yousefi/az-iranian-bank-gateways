@@ -1,6 +1,7 @@
 import logging
 import uuid
 from datetime import datetime
+from urllib import parse
 
 import requests
 from zeep import Client, Transport
@@ -181,3 +182,21 @@ class PEC(BaseBank):
         transport = Transport(timeout=5, operation_timeout=5)
         client = Client(url, transport=transport)
         return client
+
+    def _get_gateway_callback_url(self):
+        """Override to return callback URL without query parameters since PEC doesn't allow them"""
+        from django.urls import reverse
+        from .. import default_settings as settings
+        
+        url = reverse(settings.CALLBACK_NAMESPACE)
+        if self.get_request():
+            url_parts = list(parse.urlparse(url))
+            if not (url_parts[0] and url_parts[1]):
+                url = self.get_request().build_absolute_uri(url)
+                
+                # Force HTTPS if not already
+                if url.startswith('http:'):
+                    url = 'https:' + url[5:]
+        
+        # Don't add query parameters for PEC
+        return url
